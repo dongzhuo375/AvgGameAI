@@ -1,2 +1,2 @@
 # AvgGameAI
-Python作业，AI下的Avg游戏
+Python作业，AI下的Avg游戏。
