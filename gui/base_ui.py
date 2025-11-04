@@ -78,7 +78,6 @@ class BaseUI(tk.Tk):
         """处理窗口大小变化事件"""
         # 只处理主窗口的大小变化
         if event.widget == self:
-            # 使用防抖技术，避免频繁调整
             if self.resize_after_id:
                 self.after_cancel(self.resize_after_id)
             self.resize_after_id = self.after(100, self.apply_resize, event.width, event.height)
