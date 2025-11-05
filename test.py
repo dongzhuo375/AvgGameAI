@@ -93,5 +93,5 @@ if __name__ == "__main__":
     test_config()
     test_api()
     test_audio()
-    test_start_menu()  # 启动实际的开始菜单界面
+    test_start_menu()
     print("=== 测试结束 ===")
