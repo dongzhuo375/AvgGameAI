@@ -3,10 +3,13 @@ import sys
 import tempfile
 import json
 
+from config.config_manager import ConfigManager
+from config.configs import StoryConfig
+from config.decorators import set_config_manager, config_value
+from config.loaders import YamlConfigLoader
+
 sys.path.insert(0, os.path.abspath("."))
 
-from config.config_loader import JsonConfigLoader, YamlConfigLoader
-from config.config_manager import GlobalConfig, StoryConfig
 from ai_api.api_service import ApiConfig
 from audio.audio_player import play_audio
 from gui.start_menu import StartMenuFrame
@@ -54,19 +57,6 @@ class TestApp(BaseUI):
         if hasattr(frame, 'on_show'):
             frame.on_show()
 
-def test_config():
-    print("测试配置文件读取...")
-    # 跳过此测试，因为我们将在test_global_config和test_story_config中测试配置加载
-
-# def test_api():
-#     print("测试AI模型API调用...")
-#     try:
-#         ai = AIClient()
-#         result = ai.send("你好，AI！")
-#         print("API返回:", result)
-#     except Exception as e:
-#         print("API调用出错:", e)
-
 def test_audio():
     print("测试音频播放功能...")
     try:
@@ -86,23 +76,6 @@ def test_start_menu():
     except Exception as e:
         print("界面启动出错:", e)
 
-def test_config_loader_json():
-    """测试JSON配置加载器"""
-    print("测试JSON配置加载器...")
-    loader = JsonConfigLoader()
-    
-    # 检查是否存在本地配置文件
-    json_config_file = "aaa.json"
-    if os.path.exists(json_config_file):
-        try:
-            loaded_data = loader.load(json_config_file)
-            print(f"成功加载JSON配置文件: {json_config_file}")
-            print("JSON配置加载器测试通过")
-        except Exception as e:
-            print(f"JSON配置加载器测试失败: {e}")
-    else:
-        print(f"未找到本地JSON配置文件: {json_config_file}，跳过测试")
-
 def test_config_loader_yaml():
     """测试YAML配置加载器"""
     print("测试YAML配置加载器...")
@@ -119,36 +92,6 @@ def test_config_loader_yaml():
             print(f"YAML配置加载器测试失败: {e}")
     else:
         print(f"未找到本地YAML配置文件: {yaml_config_file}，跳过测试")
-
-def test_global_config():
-    """测试全局配置管理"""
-    print("测试全局配置管理...")
-    try:
-        # 创建并注入加载器
-        global_config = GlobalConfig(JsonConfigLoader())
-        
-        # 检查是否存在本地配置文件
-        json_config_file = "aaa.json"
-        if os.path.exists(json_config_file):
-            # 初始化配置
-            global_config.initialize(json_config_file)
-            if global_config.is_initialized():
-                print("全局配置管理初始化成功")
-                # 尝试获取一些配置值（如果存在）
-                api_key = global_config.get("api_key", "not_found")
-                base_url = global_config.get("base_url", "not_found")
-                timeout = global_config.get("timeout", -1)
-                
-                print(f"API Key: {api_key}")
-                print(f"Base URL: {base_url}")
-                print(f"Timeout: {timeout}")
-                print("全局配置管理测试通过")
-            else:
-                print("全局配置管理初始化失败")
-        else:
-            print(f"未找到本地JSON配置文件: {json_config_file}，跳过测试")
-    except Exception as e:
-        print(f"全局配置管理测试失败: {e}")
 
 def test_story_config():
     """测试故事配置管理"""
@@ -201,12 +144,61 @@ def test_api_config():
     except Exception as e:
         print(f"API配置测试失败: {e}")
 
+def test_config():
+    # 设置配置
+    config_manager = ConfigManager()
+
+    config_dir = os.path.join(os.path.dirname(__file__),"config")
+    print(config_dir)
+
+    global_config_path = os.path.join(config_dir, "global.json")
+    story_config_path = os.path.join(config_dir, "story.yaml")
+
+    config_manager.setup_global_config(global_config_path)
+    config_manager.setup_story_config(story_config_path)
+    set_config_manager(config_manager)
+
+    # 直接访问配置值
+    app_name = config_manager.get_global_value("app.name")
+    db_host = config_manager.get_story_value("database.host")
+    cache_enabled = config_manager.get_story_bool("cache.enabled")
+
+    print(f"📱 应用名称: {app_name}")
+    print(f"🗄️  数据库主机: {db_host}")
+    print(f"💾 缓存启用: {cache_enabled}")
+
+    # 使用装饰器
+    @config_value("app.name", "默认应用")
+    @config_value("app.version", "1.0.0")
+    def show_app_info(name, version):
+        print(f"🎉 应用信息: {name} v{version}")
+        return f"{name}_{version}"
+
+    @config_value("database.host", "localhost", use_story=True)
+    @config_value("database.port", 5432, use_story=True)
+    def connect_database(host, port):
+        print(f"🔗 连接数据库: {host}:{port}")
+        return f"postgresql://{host}:{port}"
+
+    # 调用装饰器函数
+    app_id = show_app_info()
+    db_url = connect_database()
+
+    status = config_manager.get_status()
+    print(f"\n📊 配置状态:")
+    print(f"   全局配置: {status['global_config']['initialized']} ({status['global_config']['keys_count']} 个键)")
+    print(f"   故事配置: {status['story_config']['keys_count']} 个键")
+
+    return {
+        "app_id": app_id,
+        "db_url": db_url,
+        "status": status
+    }
+
 if __name__ == "__main__":
     print("=== 功能测试 ===")
-    # test_config()
-    test_config_loader_json()
+    test_config()
     # test_config_loader_yaml()
-    test_global_config()
     # test_story_config()
     # test_api_config()
     # test_api()

@@ -1,103 +1,93 @@
-from config.config_loader import ConfigLoader
-from typing import Any
+from typing import Any, Optional
 
-class GlobalConfig:
-    _instance = None
-    _data = {}
-    _initialized = False
-
-    def __new__(cls, loader: ConfigLoader = None):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            # 注入加载器
-            cls._instance._loader = loader
-        return cls._instance
-
-    def initialize(self, config_file: str):
-        if self._initialized:
-            print("全局配置已初始化，跳过重复初始化")
-            return
-
-        if not self._loader:
-            print("错误: 未设置配置加载器")
-            return
-
-        try:
-            self._data = self._loader.load(config_file)
-            self._initialized = True
-            print(f"全局配置初始化: {config_file}")
-        except Exception as e:
-            print(f"全局配置初始化失败: {e}")
-
-    def inject_loader(self, loader: ConfigLoader):
-        self._loader = loader
-        print("全局配置加载器已注入")
-
-    def get(self, key: str, default: Any = None) -> Any:
-        if not self._initialized:
-            print("警告: 全局配置未初始化")
-            return default
-
-        keys = key.split('.')
-        value = self._data
-
-        for k in keys:
-            if isinstance(value, dict) and k in value:
-                value = value[k]
-            else:
-                return default
-        return value
-
-    def is_initialized(self) -> bool:
-        return self._initialized
+from config.configs import StoryConfig, GlobalConfig
+from config.loaders import ConfigLoader, JsonConfigLoader, YamlConfigLoader
 
 
-class StoryConfig:
-    _instance = None
-    _data = {}
-    _current_file = None
+class ConfigManager:
+    """
+    配置管理器
+    """
 
-    def __new__(cls, loader: ConfigLoader = None):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            # 注入加载器
-            cls._instance._loader = loader
-        return cls._instance
+    def __init__(self):
+        # 创建加载器实例
+        self.json_loader = JsonConfigLoader()
+        self.yaml_loader = YamlConfigLoader()
 
-    def inject_loader(self, loader: ConfigLoader):
-        self._loader = loader
-        print("运行时配置加载器已注入")
+        # 创建配置实例
+        self.global_config = GlobalConfig(self.json_loader)
+        self.story_config = StoryConfig(self.yaml_loader)
 
-    def load(self, config_file: str) -> bool:
-        if not self._loader:
-            print("错误: 未设置配置加载器")
-            return False
+    def setup_global_config(self, file_path: str, loader: Optional[ConfigLoader] = None) -> bool:
+        """设置全局配置"""
+        if loader:
+            self.global_config.set_loader(loader)
+        return self.global_config.load(file_path)
 
-        self._current_file = config_file
-        return self.reload()
+    def setup_story_config(self, file_path: str, loader: Optional[ConfigLoader] = None) -> bool:
+        """设置故事配置"""
+        if loader:
+            self.story_config.set_loader(loader)
+        return self.story_config.load(file_path)
 
-    def reload(self) -> bool:
-        if not self._current_file or not self._loader:
-            return False
+    def reload_story_config(self) -> bool:
+        """重新加载故事配置"""
+        return self.story_config.reload()
 
-        try:
-            self._data = self._loader.load(self._current_file)
-            print(f"运行时配置加载: {self._current_file}")
-            return True
-        except Exception as e:
-            print(f"运行时配置加载失败: {e}")
-            return False
+    def get_global_value(self, key: str, default: Any = None) -> Any:
+        """获取全局配置值"""
+        return self.global_config.get_value(key, default)
 
-    def get(self, key: str, default: Any = None) -> Any:
-        keys = key.split('.')
-        value = self._data
+    def get_story_value(self, key: str, default: Any = None) -> Any:
+        """获取故事配置值"""
+        return self.story_config.get_value(key, default)
 
-        for k in keys:
-            if isinstance(value, dict) and k in value:
-                value = value[k]
-            else:
-                return default
-        return value
+    def switch_global_loader(self, loader: ConfigLoader):
+        """切换全局配置加载器"""
+        self.global_config.set_loader(loader)
 
-    def current_file(self) -> str:
-        return self._current_file
+    def switch_story_loader(self, loader: ConfigLoader):
+        """切换故事配置加载器"""
+        self.story_config.set_loader(loader)
+
+    def get_global_int(self, key: str, default: int = 0) -> int:
+        """获取全局整型配置值"""
+        return self.global_config.get_int(key, default)
+
+    def get_story_int(self, key: str, default: int = 0) -> int:
+        """获取故事整型配置值"""
+        return self.story_config.get_int(key, default)
+
+    def get_global_bool(self, key: str, default: bool = False) -> bool:
+        """获取全局布尔型配置值"""
+        return self.global_config.get_bool(key, default)
+
+    def get_story_bool(self, key: str, default: bool = False) -> bool:
+        """获取故事布尔型配置值"""
+        return self.story_config.get_bool(key, default)
+
+    def get_global_float(self, key: str, default: float = 0.0) -> float:
+        """获取全局浮点型配置值"""
+        return self.global_config.get_float(key, default)
+
+    def get_story_float(self, key: str, default: float = 0.0) -> float:
+        """获取故事浮点型配置值"""
+        return self.story_config.get_float(key, default)
+
+    def is_global_initialized(self) -> bool:
+        """检查全局配置是否已初始化"""
+        return self.global_config.is_initialized()
+
+    def get_status(self) -> dict:
+        """获取配置管理器状态"""
+        return {
+            "global_config": {
+                "initialized": self.global_config.is_initialized(),
+                "file": self.global_config.current_file(),
+                "keys_count": len(self.global_config.get_all_data())
+            },
+            "story_config": {
+                "file": self.story_config.current_file(),
+                "keys_count": len(self.story_config.get_all_data())
+            }
+        }
