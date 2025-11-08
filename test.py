@@ -3,14 +3,17 @@ import sys
 import tempfile
 import json
 
+from openai import OpenAI, api_key
+
+from ai_api.api_client import ChatSession
 from config.config_manager import ConfigManager
 from config.configs import StoryConfig
 from config.decorators import set_config_manager, config_value
 from config.loaders import YamlConfigLoader
+from service.story_service import get_stories
 
 sys.path.insert(0, os.path.abspath("."))
 
-from ai_api.api_service import ApiConfig
 from audio.audio_player import play_audio
 from gui.start_menu import StartMenuFrame
 from gui.game_screen import GameScreenFrame
@@ -118,40 +121,40 @@ def test_story_config():
     except Exception as e:
         print(f"故事配置管理测试失败: {e}")
 
-def test_api_config():
-    """测试API配置"""
-    print("测试API配置...")
-    try:
-        # 创建模拟的GlobalConfig实例
-        class MockGlobalConfig:
-            def get(self, key, default=None):
-                config_map = {
-                    "api_key": "test_key_123",
-                    "base_url": "https://api.test.com",
-                    "timeout": 60
-                }
-                return config_map.get(key, default)
-        
-        mock_global_config = MockGlobalConfig()
-        api_config = ApiConfig(mock_global_config)
-        
-        # 测试获取配置值
-        assert api_config.get_key() == "test_key_123"
-        assert api_config.get_url() == "https://api.test.com"
-        assert api_config.get_timeout() == 60
-        
-        print("API配置测试通过")
-    except Exception as e:
-        print(f"API配置测试失败: {e}")
+# def test_api_config():
+#     """测试API配置"""
+#     print("测试API配置...")
+#     try:
+#         # 创建模拟的GlobalConfig实例
+#         class MockGlobalConfig:
+#             def get(self, key, default=None):
+#                 config_map = {
+#                     "api_key": "test_key_123",
+#                     "base_url": "https://api.test.com",
+#                     "timeout": 60
+#                 }
+#                 return config_map.get(key, default)
+#
+#         mock_global_config = MockGlobalConfig()
+#         api_config = ApiConfig(mock_global_config)
+#
+#         # 测试获取配置值
+#         assert api_config.get_key() == "test_key_123"
+#         assert api_config.get_url() == "https://api.test.com"
+#         assert api_config.get_timeout() == 60
+#
+#         print("API配置测试通过")
+#     except Exception as e:
+#         print(f"API配置测试失败: {e}")
 
 def test_config():
     # 设置配置
     config_manager = ConfigManager()
 
-    config_dir = os.path.join(os.path.dirname(__file__),"config")
+    config_dir = os.path.join(os.path.dirname(__file__))
     print(config_dir)
 
-    global_config_path = os.path.join(config_dir, "global.json")
+    global_config_path = os.path.join(config_dir, "config.json")
     story_config_path = os.path.join(config_dir, "story.yaml")
 
     config_manager.setup_global_config(global_config_path)
@@ -163,29 +166,32 @@ def test_config():
     db_host = config_manager.get_story_value("database.host")
     cache_enabled = config_manager.get_story_bool("cache.enabled")
 
-    print(f"📱 应用名称: {app_name}")
-    print(f"🗄️  数据库主机: {db_host}")
-    print(f"💾 缓存启用: {cache_enabled}")
+    print(f"应用名称: {app_name}")
+    print(f"数据库主机: {db_host}")
+    print(f"缓存启用: {cache_enabled}")
 
     # 使用装饰器
     @config_value("app.name", "默认应用")
     @config_value("app.version", "1.0.0")
     def show_app_info(name, version):
-        print(f"🎉 应用信息: {name} v{version}")
+        print(f"应用信息: {name} v{version}")
         return f"{name}_{version}"
 
     @config_value("database.host", "localhost", use_story=True)
     @config_value("database.port", 5432, use_story=True)
     def connect_database(host, port):
-        print(f"🔗 连接数据库: {host}:{port}")
+        print(f"连接数据库: {host}:{port}")
         return f"postgresql://{host}:{port}"
+
 
     # 调用装饰器函数
     app_id = show_app_info()
     db_url = connect_database()
+    # test_key = get_key()
+    # print(test_key)
 
     status = config_manager.get_status()
-    print(f"\n📊 配置状态:")
+    print(f"\n配置状态:")
     print(f"   全局配置: {status['global_config']['initialized']} ({status['global_config']['keys_count']} 个键)")
     print(f"   故事配置: {status['story_config']['keys_count']} 个键")
 
@@ -195,13 +201,20 @@ def test_config():
         "status": status
     }
 
+def test_api():
+    chat = ChatSession()
+    chat.add_user_message("什么是Python？")
+    reply1 = chat.get_response()
+    print(reply1)
+
 if __name__ == "__main__":
     print("=== 功能测试 ===")
     test_config()
     # test_config_loader_yaml()
     # test_story_config()
     # test_api_config()
-    # test_api()
+    test_api()
     # test_audio()
     # test_start_menu()
+    # print(get_stories(os.path.join(os.path.dirname(__file__))))
     print("=== 测试结束 ===")
