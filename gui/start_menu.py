@@ -1,5 +1,9 @@
+import os
 import tkinter as tk
 from tkinter import ttk
+
+from config.decorators import get_config_manager
+from service.story_service import get_stories, get_stories_path
 from .base_ui import BaseFrame, RoundedBorderFrame
 
 class StartMenuFrame(BaseFrame):
@@ -12,12 +16,12 @@ class StartMenuFrame(BaseFrame):
 
         self.title_label = ttk.Label(
             self.main_frame, 
-            text="AVG 游戏", 
+            text="选择故事",
             style='Title.TLabel'
         )
         self.title_label.pack(pady=(30, 30))
 
-        self.choices = ["开始游戏", "游戏设置", "退出游戏"]
+        self.choices = get_stories()
         self.selected_index = 0
         
         # 边框容器
@@ -38,7 +42,7 @@ class StartMenuFrame(BaseFrame):
         self.listbox = tk.Listbox(
             self.listbox_content,
             width=30,
-            height=6,
+            height=14,
             font=('微软雅黑', 14),
             bg='black',
             fg='white',
@@ -63,14 +67,27 @@ class StartMenuFrame(BaseFrame):
         self.listbox.selection_set(0)
         self.listbox.activate(0)
         
-        # 确认按钮
+        # 按钮框架
+        self.button_frame = tk.Frame(self.main_frame, bg='black')
+        self.button_frame.pack(pady=(0, 30))
+        
+        # 开始
         self.confirm_button = ttk.Button(
-            self.main_frame,
-            text="确认",
+            self.button_frame,
+            text="开始",
             style='Game.TButton',
             command=self.on_confirm
         )
-        self.confirm_button.pack(pady=(0, 30))
+        self.confirm_button.pack(side='left', padx=(0, 50))
+        
+        # 退出
+        self.exit_button = ttk.Button(
+            self.button_frame,
+            text="退出",
+            style='Game.TButton',
+            command=controller.on_closing
+        )
+        self.exit_button.pack()
 
         self.bind('<Up>', self.move_selection_up)
         self.bind('<Down>', self.move_selection_down)
@@ -124,11 +141,21 @@ class StartMenuFrame(BaseFrame):
         if selection:
             index = selection[0]
             choice = self.choices[index]
-            
-            if choice == "开始游戏":
-                self.controller.show_frame("GameScreenFrame")
-            elif choice == "游戏设置":
-                # 这里可以添加设置界面
-                pass
-            elif choice == "退出游戏":
-                self.controller.on_closing()
+            story_path = get_stories_path()
+
+            yaml_file = os.path.join(story_path, f"{choice}.yaml")
+            yml_file = os.path.join(story_path, f"{choice}.yml")
+
+            # 检测文件类型并执行相应函数
+            if os.path.exists(yaml_file):
+                print(f"找到 YAML 文件: {yaml_file}")
+                get_config_manager().setup_story_config(yaml_file)
+            elif os.path.exists(yml_file):
+                print(f"找到 YML 文件: {yml_file}")
+                get_config_manager().setup_story_config(yml_file)
+            else:
+                print(f"错误：找不到故事文件 '{choice}'")
+                print(f"在目录 {story_path} 中未找到 {choice}.yaml 或 {choice}.yml")
+                return False
+
+            self.controller.show_frame("GameScreenFrame")

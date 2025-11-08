@@ -1,9 +1,15 @@
+import os
 import tkinter as tk
 from tkinter import ttk
+
+from config.config_manager import ConfigManager
+from config.decorators import set_config_manager
 from gui.base_ui import BaseUI
 from gui.start_menu import StartMenuFrame
 from gui.game_screen import GameScreenFrame
 from gui.end_screen import EndScreenFrame
+from service.story_service import set_storise_path
+
 
 class MainApp(BaseUI):
     def __init__(self):
@@ -41,6 +47,16 @@ class MainApp(BaseUI):
             frame.on_show()
 
 def main():
+    #初始化配置
+    config_manager = ConfigManager()
+
+    config_dir = os.path.join(os.path.dirname(__file__))
+    global_config_path = os.path.join(config_dir, "config.json")
+
+    config_manager.setup_global_config(global_config_path)
+    set_config_manager(config_manager)
+    set_storise_path(os.path.join(os.path.dirname(__file__), "data","stories"))
+
     app = MainApp()
     app.mainloop()
 

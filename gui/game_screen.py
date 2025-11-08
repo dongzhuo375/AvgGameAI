@@ -13,6 +13,7 @@ class GameScreenFrame(BaseFrame):
         self.choices = ["探索森林", "前往城镇", "休息一下"]
 
         self.is_typing = False
+        self.text_finished = False  # 标记文本是否已完成显示
         
         # 创建主框架
         self.main_frame = tk.Frame(self, bg='black')
@@ -91,6 +92,9 @@ class GameScreenFrame(BaseFrame):
         if self.is_typing:
             self.dialog_label.skip_typewriter()
             self.is_typing = False
+        elif self.text_finished:
+            self.show_choices()
+            self.text_finished = False 
         
     def apply_frame_resize(self, width, height):
         width_ratio = width / self.base_width
@@ -135,12 +139,17 @@ class GameScreenFrame(BaseFrame):
     def on_show(self):
         """当界面显示时调用"""
         self.is_typing = True
-        self.dialog_label.typewriter_effect(self.dialog_text, delay=50, callback=self.show_choices)
-        #文本显示,跳出选项
+        self.text_finished = False
+        self.dialog_label.typewriter_effect(self.dialog_text, delay=50, callback=self.on_text_finished)
+        
+    def on_text_finished(self):
+        """当文本显示完成时调用"""
+        self.is_typing = False
+        self.text_finished = True
         
     def show_choices(self):
-        self.is_typing = False
         self.choice_frame.pack(pady=(20, 20))
         
     def on_choice(self, index):
+        self.choice_frame.pack_forget()
         self.controller.show_frame("EndScreenFrame")
