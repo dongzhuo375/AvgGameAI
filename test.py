@@ -8,7 +8,7 @@ from openai import OpenAI, api_key
 from ai_api.api_client import ChatSession
 from config.config_manager import ConfigManager
 from config.configs import StoryConfig
-from config.decorators import set_config_manager, config_value
+from config.decorators import set_config_manager, config_value, get_config_manager
 from config.loaders import YamlConfigLoader
 from service.story_service import get_stories
 
@@ -195,6 +195,8 @@ def test_config():
     print(f"   全局配置: {status['global_config']['initialized']} ({status['global_config']['keys_count']} 个键)")
     print(f"   故事配置: {status['story_config']['keys_count']} 个键")
 
+    print(config_manager.get_story_value("attributes"))
+
     return {
         "app_id": app_id,
         "db_url": db_url,
@@ -203,7 +205,6 @@ def test_config():
 
 def test_api():
     chat = ChatSession()
-    chat.add_user_message("什么是Python？")
     reply1 = chat.get_response()
     print(reply1)
 
@@ -218,3 +219,8 @@ if __name__ == "__main__":
     # test_start_menu()
     # print(get_stories(os.path.join(os.path.dirname(__file__))))
     print("=== 测试结束 ===")
+
+
+
+
+
