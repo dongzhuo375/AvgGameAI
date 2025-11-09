@@ -158,4 +158,6 @@ class StartMenuFrame(BaseFrame):
                 print(f"在目录 {story_path} 中未找到 {choice}.yaml 或 {choice}.yml")
                 return False
 
+            # 通知主应用开始新游戏
+            self.controller.start_new_game()
             self.controller.show_frame("GameScreenFrame")

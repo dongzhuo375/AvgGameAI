@@ -5,8 +5,6 @@ from typing import Any
 from config.config_manager import ConfigManager
 
 _stories_path : str = None
-_end_text : str = None
-
 _game_attributes : SimpleNamespace = None
 
 
@@ -40,24 +38,16 @@ def set_storise_path(file: str):
 def get_stories_path():
     return  _stories_path
 
-def set_end_text(text: str):
-    global _end_text
-    _end_text = text
-
-def get_end_text():
-    return  _end_text
 
 
-
-
-def get(attr_name: str, default: Any = None) -> Any:
+def get_attribute(attr_name: str, default: Any = None) -> Any:
     """通过字符串获取属性值"""
     if _game_attributes is None:
         raise ValueError("属性尚未初始化，请先调用 GameControl.init_attributes()")
     return getattr(_game_attributes, attr_name, default)
 
 
-def set(attr_name: str, value: Any):
+def set_attribute(attr_name: str, value: Any):
     """通过字符串设置属性值"""
     global _game_attributes
     if _game_attributes is None:

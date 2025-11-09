@@ -1,5 +1,6 @@
 from typing import Dict, Any
 
+from ai_api.api_client import ChatSession
 from config.decorators import get_config_manager, config_value
 from service.story_service import init_attributes
 
@@ -12,4 +13,3 @@ class GameControl:
 
     def require_story(self, key):
         return self.configmanager.get_story_value(key)
-

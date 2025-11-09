@@ -9,7 +9,7 @@ class EndScreenFrame(BaseFrame):
         self.result = None
         
         # 结束文本
-        self.end_text = """故事结束了，但这只是你冒险旅程的一个节点。
+        self.default_end_text = """故事结束了，但这只是你冒险旅程的一个节点。
         
 在这个广阔的世界中，还有无数的秘密等待着你去发现，
 还有更多的挑战等待着你去面对。
@@ -131,15 +131,18 @@ class EndScreenFrame(BaseFrame):
             ipady=button_ipady
         )
         
-    def on_show(self):
+    def on_show(self, end_text=None):
         """当界面显示时调用"""
         # 重置文本显示
         self.end_label.config(text="")
 
         self.restart_button.config(state='disabled')
         self.quit_button.config(state='disabled')
+        
+        # 使用传入的结束文本或默认文本
+        text_to_display = end_text if end_text is not None else self.default_end_text
 
-        self.end_label.typewriter_effect(self.end_text, delay=30, callback=self.enable_buttons)
+        self.end_label.typewriter_effect(text_to_display, delay=30, callback=self.enable_buttons)
         
     def enable_buttons(self):
         """启用按钮"""

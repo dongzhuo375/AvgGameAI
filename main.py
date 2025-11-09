@@ -2,6 +2,7 @@ import os
 import tkinter as tk
 from tkinter import ttk
 
+from ai_api.api_client import ChatSession
 from config.config_manager import ConfigManager
 from config.decorators import set_config_manager
 from gui.base_ui import BaseUI
@@ -23,6 +24,7 @@ class MainApp(BaseUI):
         self.container.pack(fill=tk.BOTH, expand=True)
 
         self.frames = {}
+        self.chat_session = None
 
         self.init_frames()
 
@@ -39,12 +41,22 @@ class MainApp(BaseUI):
         self.container.grid_rowconfigure(0, weight=1)
         self.container.grid_columnconfigure(0, weight=1)
         
-    def show_frame(self, frame_name):
+    def show_frame(self, frame_name, **kwargs):
         frame = self.frames[frame_name]
         frame.tkraise()
 
         if hasattr(frame, 'on_show'):
-            frame.on_show()
+            frame.on_show(**kwargs)
+            
+    def start_new_game(self):
+        """开始新游戏"""
+        # 创建新的ChatSession实例
+        self.chat_session = ChatSession()
+        
+        # 获取GameScreenFrame并设置ChatSession
+        game_screen = self.frames["GameScreenFrame"]
+        game_screen.set_chat_session(self.chat_session)
+        game_screen.start_new_game()
 
 def main():
     #初始化配置
