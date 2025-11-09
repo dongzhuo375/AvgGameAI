@@ -52,13 +52,13 @@ class TestApp(BaseUI):
         self.container.grid_rowconfigure(0, weight=1)
         self.container.grid_columnconfigure(0, weight=1)
         
-    def show_frame(self, frame_name):
+    def show_frame(self, frame_name, **kwargs):
         frame = self.frames[frame_name]
         frame.tkraise()
         
         # 如果有特殊显示逻辑，调用相应方法
         if hasattr(frame, 'on_show'):
-            frame.on_show()
+            frame.on_show(**kwargs)
 
 def test_audio():
     print("测试音频播放功能...")
@@ -214,13 +214,8 @@ if __name__ == "__main__":
     # test_config_loader_yaml()
     # test_story_config()
     # test_api_config()
-    test_api()
+    # test_api()
     # test_audio()
     # test_start_menu()
     # print(get_stories(os.path.join(os.path.dirname(__file__))))
     print("=== 测试结束 ===")
-
-
-
-
-
