@@ -3,12 +3,20 @@
 """
 
 import functools
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, LiteralString
 
 from config.config_manager import ConfigManager
 
 # 全局配置管理器实例
 _config_manager: Optional['ConfigManager'] = None
+_config_dir : LiteralString = None
+
+def set_config_dir(path: LiteralString):
+    global _config_dir
+    _config_dir = path
+
+def get_config_dir():
+    return _config_dir
 
 def get_config_manager() -> 'ConfigManager':
     """获取配置管理器实例"""

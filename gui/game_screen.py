@@ -1,9 +1,14 @@
+import os.path
 import tkinter as tk
 from tkinter import ttk
 import re
 from typing import List, Dict, Any
 import threading
 import time
+from playsound import playsound
+
+from audio.audio_player import play_audio
+from config.decorators import get_config_dir
 from .base_ui import BaseFrame, TypewriterLabel, RoundedBorderFrame
 
 class GameScreenFrame(BaseFrame):
@@ -367,7 +372,6 @@ class GameScreenFrame(BaseFrame):
         """当文本显示完成时调用"""
         self.is_typing = False
         self.text_finished = True
-        # 不再自动调用display_next_segment，等待用户点击
         
     def on_attribute_segment_finished(self, segment):
         """
@@ -386,9 +390,13 @@ class GameScreenFrame(BaseFrame):
         """
         当声音段落处理完成时调用
         """
-        # 在这里处理声音播放的实时执行
-        # 留空等待后续处理
-        pass
+        # 从段落内容中获取声音文件名并播放
+        sound_file = segment["content"]
+        sound_path = os.path.join(get_config_dir(), "data", f"sounds/{sound_file}.mp3")
+        try:
+            playsound(sound_path)
+        except Exception as e:
+            print(f"播放声音失败: {e}")
         
     def show_choices(self):
         """

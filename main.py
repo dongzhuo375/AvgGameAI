@@ -4,7 +4,7 @@ from tkinter import ttk
 
 from ai_api.api_client import ChatSession
 from config.config_manager import ConfigManager
-from config.decorators import set_config_manager
+from config.decorators import set_config_manager, set_config_dir
 from gui.base_ui import BaseUI
 from gui.start_menu import StartMenuFrame
 from gui.game_screen import GameScreenFrame
@@ -63,11 +63,12 @@ def main():
     config_manager = ConfigManager()
 
     config_dir = os.path.join(os.path.dirname(__file__))
+    set_config_dir(config_dir)
     global_config_path = os.path.join(config_dir, "config.json")
 
     config_manager.setup_global_config(global_config_path)
     set_config_manager(config_manager)
-    set_storise_path(os.path.join(os.path.dirname(__file__), "data","stories"))
+    set_storise_path(os.path.join(config_dir, "data","stories"))
 
     app = MainApp()
     app.mainloop()
