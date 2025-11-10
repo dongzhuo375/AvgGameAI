@@ -140,7 +140,8 @@ class EndScreenFrame(BaseFrame):
         self.quit_button.config(state='disabled')
         
         # 使用传入的结束文本或默认文本
-        text_to_display = end_text if end_text is not None else self.default_end_text
+        text_to_display = end_text
+        #if end_text is not None else self.default_end_text
 
         self.end_label.typewriter_effect(text_to_display, delay=30, callback=self.enable_buttons)
         

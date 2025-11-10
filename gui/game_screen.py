@@ -151,12 +151,11 @@ class GameScreenFrame(BaseFrame):
         print(response_text)
 
         result = {
-            "segments": [],  # 统一存储所有段落（包括文本和属性）
-            "sounds": [],
+            "segments": [],  # 统一存储所有段落（包括文本、属性和声音）
             "choices": [],
             "end": None
         }
-        
+
         lines = response_text.split('\n')
         for line in lines:
             line = line.strip()
@@ -174,8 +173,11 @@ class GameScreenFrame(BaseFrame):
             elif line.startswith('[sound]'):
                 sound_content = line[7:].strip()  # 去掉[sound]前缀
                 if sound_content:
-                    result["sounds"].append(sound_content)
-                    # 暂时不处理声音，等待后续处理
+                    result["segments"].append({
+                        "type": "sound",
+                        "content": sound_content
+                    })
+                    # 声音内容不需要在文本框显示，但需要在对应位置触发处理
                     
             elif line.startswith('[attribute='):
                 # 解析属性变化，格式: [attribute=属性名.数值]原因+属性变化情况
@@ -228,6 +230,13 @@ class GameScreenFrame(BaseFrame):
                     delay=50, 
                     callback=lambda: self.on_attribute_segment_finished(segment)
                 )
+            elif segment["type"] == "sound":
+                # 处理声音段落
+                self.on_sound_segment_finished(segment)
+                # 声音段落不需要显示文本，直接处理下一个段落
+                self.current_segment_index += 1
+                self.display_next_segment()
+                return
             
             self.current_segment_index += 1
         else:
@@ -372,6 +381,14 @@ class GameScreenFrame(BaseFrame):
         self.is_typing = False
         self.text_finished = True
         # 不再自动调用display_next_segment，等待用户点击
+
+    def on_sound_segment_finished(self, segment):
+        """
+        当声音段落处理完成时调用
+        """
+        # 在这里处理声音播放的实时执行
+        # 留空等待后续处理
+        pass
         
     def show_choices(self):
         """
