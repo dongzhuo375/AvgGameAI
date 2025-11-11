@@ -1,0 +1,20 @@
+{
+  "api_key": "你的API KEY",
+  "base_url": "基础url",
+  "model": "模型名",
+  "timeout": 30,
+  "sounds": {
+    "bushes": {
+      "duration": 2,
+      "description": "草丛被拨开的声音，可以用作草丛中行走，草丛中出现人物的声音"
+    },
+    "crow": {
+      "duration": 11,
+      "description": "乌鸦的叫声"
+    },
+    "door": {
+      "duration": 1,
+      "description": "打开木质门的声音，也可以用作打开箱子等"
+    }
+  }
+}
