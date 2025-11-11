@@ -34,6 +34,17 @@ class GameScreenFrame(BaseFrame):
         self.main_frame.pack(fill=tk.BOTH, expand=True)
         self.main_frame.bind("<Button-1>", self.on_click)
         
+        # 音效显示标签 - 添加在顶部居中显示
+        self.sound_label = tk.Label(
+            self.main_frame,
+            text="",
+            font=('微软雅黑', 12),
+            bg='black',
+            fg='white',
+            anchor='center'
+        )
+        self.sound_label.pack(side=tk.TOP, fill=tk.X, padx=50, pady=5)
+        
         # 空白区域
         self.top_spacer = tk.Frame(self.main_frame, bg='black', height=100)
         self.top_spacer.pack(fill=tk.X)
@@ -112,7 +123,7 @@ class GameScreenFrame(BaseFrame):
         self.pending_end_text = None  # 清除待处理的结束文本
         
         # 清空显示文本
-        self.dialog_label.config(text="")
+        self.dialog_label.config(text="当前声音: 无")
         
         # 隐藏选项按钮
         self.choice_frame.pack_forget()
@@ -120,6 +131,9 @@ class GameScreenFrame(BaseFrame):
         # 重置按钮文本
         for button in self.choice_buttons:
             button.config(text="")
+            
+        # 清除音效显示
+        self.sound_label.config(text="")
             
     def set_chat_session(self, chat_session):
         """设置ChatSession实例"""
@@ -162,9 +176,11 @@ class GameScreenFrame(BaseFrame):
         }
 
         lines = response_text.split('\n')
-        for line in lines:
-            line = line.strip()
+        i = 0
+        while i < len(lines):
+            line = lines[i].strip()
             if not line:  # 跳过空行
+                i += 1
                 continue
                 
             if line.startswith('[text]'):
@@ -204,8 +220,17 @@ class GameScreenFrame(BaseFrame):
                 result["choices"] = [choice.strip() for choice in choice_content.split('|') if choice.strip()]
                 
             elif line.startswith('[end]'):
+                # 处理[end]标签及其后所有剩余的文本内容
                 end_content = line[5:].strip()  # 去掉[end]前缀
-                result["end"] = end_content
+                # 添加后续所有行的内容
+                i += 1
+                while i < len(lines):
+                    end_content += '\n' + lines[i]
+                    i += 1
+                result["end"] = end_content.strip()
+                break  # 处理完[end]标签后直接退出循环，因为后面的内容都属于end内容
+                
+            i += 1
 
         return result
         
@@ -363,6 +388,10 @@ class GameScreenFrame(BaseFrame):
         for button in self.choice_buttons:
             button.pack_configure(pady=button_pady, ipadx=button_ipadx, ipady=button_ipady)
             
+        # 调整音效标签字体大小
+        sound_label_font_size = max(int(12 * scale), 8)
+        self.sound_label.config(font=('微软雅黑', sound_label_font_size))
+            
     def on_show(self):
         """当界面显示时调用"""
         # 这里可以初始化游戏内容
@@ -392,11 +421,29 @@ class GameScreenFrame(BaseFrame):
         """
         # 从段落内容中获取声音文件名并播放
         sound_file = segment["content"]
+        
+        # 显示当前播放的音效
+        self.sound_label.config(text=f"当前声音: {sound_file}")
+        
+        # 在后台线程中播放音效，避免阻塞UI
+        threading.Thread(
+            target=self._play_sound_async,
+            args=(sound_file,),
+            daemon=True
+        ).start()
+        
+    def _play_sound_async(self, sound_file):
+        """
+        异步播放音效
+        """
         sound_path = os.path.join(get_config_dir(), "data", f"sounds/{sound_file}.mp3")
         try:
             playsound(sound_path)
         except Exception as e:
             print(f"播放声音失败: {e}")
+        finally:
+            # 播放完成后清除显示
+            self.after(0, lambda: self.sound_label.config(text="当前声音: null"))
         
     def show_choices(self):
         """
